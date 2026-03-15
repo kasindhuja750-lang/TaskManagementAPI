@@ -1,0 +1,371 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Task Manager</title>
+    <style>
+        .status-pending {
+            background: #9ca3af;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+
+        .status-progress {
+            background: #f59e0b;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+
+        .status-done {
+            background: #10b981;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-image: url("/images/workspace.jpeg");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+
+        .overlay {
+            min-height: 100vh;
+            background: rgba(0, 0, 0, 0.45);
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+            .header h1 {
+                margin: 0;
+                font-size: 42px;
+                font-weight: bold;
+            }
+
+            .header p {
+                margin-top: 10px;
+                font-size: 16px;
+                color: #e8e8e8;
+            }
+
+        .form-card,
+        .tasks-wrapper {
+            background: rgba(255, 255, 255, 0.14);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .form-card {
+            margin-bottom: 25px;
+        }
+
+        .form-title {
+            font-size: 22px;
+            margin-bottom: 18px;
+            font-weight: bold;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        input {
+            flex: 1;
+            min-width: 220px;
+            padding: 12px 14px;
+            border: none;
+            border-radius: 10px;
+            outline: none;
+            font-size: 15px;
+        }
+
+        button {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: 0.2s ease;
+        }
+
+            button:hover {
+                transform: translateY(-1px);
+                opacity: 0.95;
+            }
+
+        .add-btn {
+            background: #2563eb;
+            color: white;
+        }
+
+        .update-btn {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .done-btn {
+            background: #10b981;
+            color: white;
+        }
+
+        .delete-btn {
+            background: #ef4444;
+            color: white;
+        }
+
+        .tasks-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+            .tasks-header h2 {
+                margin: 0;
+                font-size: 24px;
+            }
+
+        .task-list {
+            display: grid;
+            gap: 16px;
+        }
+
+        .task-card {
+            background: rgba(255, 255, 255, 0.16);
+            border-radius: 14px;
+            padding: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .task-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .task-desc {
+            font-size: 15px;
+            color: #f1f1f1;
+            margin-bottom: 10px;
+        }
+
+        .task-status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 14px;
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+        .task-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #f3f3f3;
+            padding: 25px 0;
+            font-size: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 32px;
+            }
+
+            .form-row {
+                flex-direction: column;
+            }
+
+            input,
+            .add-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay">
+        <div class="container">
+
+            <div class="header">
+                <h1>Task Manager</h1>
+                <p>Organize your work in a clean and professional way</p>
+            </div>
+
+            <div class="form-card">
+                <div class="form-title">Add New Task</div>
+                <div class="form-row">
+                    <input id="title" placeholder="Enter task title" />
+                    <input id="desc" placeholder="Enter task description" />
+                    <button class="add-btn" onclick="addTask()">Add Task</button>
+                </div>
+            </div>
+
+            <div class="tasks-wrapper">
+                <div class="tasks-header">
+                    <h2>Your Tasks</h2>
+                </div>
+
+                <div id="taskList" class="task-list"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const apiUrl = "https://localhost:7109/api/Tasks";
+
+        async function loadTasks() {
+            let response = await fetch(apiUrl);
+            let data = await response.json();
+
+            let list = document.getElementById("taskList");
+            list.innerHTML = "";
+
+            if (!data || data.length === 0) {
+                list.innerHTML = `<div class="empty-message">No tasks available.</div>`;
+                return;
+            }
+
+            data.forEach(task => {
+                let card = document.createElement("div");
+                card.className = "task-card";
+
+                card.innerHTML = `
+                            <div class="task-title">${task.title}</div>
+                            <div class="task-desc">${task.description}</div>
+                            <div class="task-status ${getStatusClass(task.status)}">${task.status}</div>
+                            <div class="task-actions">
+                                <button class="update-btn" onclick="markInProgress(${task.id}, '${escapeText(task.title)}', '${escapeText(task.description)}')">In Progress</button>
+                                <button class="done-btn" onclick="markDone(${task.id}, '${escapeText(task.title)}', '${escapeText(task.description)}')">Done</button>
+                                <button class="delete-btn" onclick="deleteTask(${task.id})">Delete</button>
+                            </div>
+                        `;
+
+                list.appendChild(card);
+            });
+        }
+
+        async function addTask() {
+            let title = document.getElementById("title").value.trim();
+            let desc = document.getElementById("desc").value.trim();
+
+            if (!title || !desc) {
+                alert("Please enter title and description");
+                return;
+            }
+
+            await fetch(apiUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    title: title,
+                    description: desc,
+                    status: "Pending"
+                })
+            });
+
+            document.getElementById("title").value = "";
+            document.getElementById("desc").value = "";
+
+            loadTasks();
+        }
+
+        async function markInProgress(id, title, description) {
+            await fetch(`${apiUrl}/${id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    id: id,
+                    title: title,
+                    description: description,
+                    status: "In Progress"
+                })
+            });
+
+            loadTasks();
+        }
+
+        async function markDone(id, title, description) {
+            await fetch(`${apiUrl}/${id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    id: id,
+                    title: title,
+                    description: description,
+                    status: "Done"
+                })
+            });
+
+            loadTasks();
+        }
+
+        async function deleteTask(id) {
+            await fetch(`${apiUrl}/${id}`, {
+                method: "DELETE"
+            });
+
+            loadTasks();
+        }
+
+        function escapeText(text) {
+            return String(text).replace(/'/g, "\\'");
+        }
+
+        loadTasks();
+        function getStatusClass(status) {
+
+            if (status === "Pending")
+                return "status-pending";
+
+            if (status === "Progress")
+                return "status-progress";
+
+            if (status === "Done")
+                return "status-done";
+
+            return "";
+        }
+    </script>
+</body>
+</html>
